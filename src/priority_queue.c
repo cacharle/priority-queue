@@ -17,6 +17,23 @@ priority_queue *priority_queue_new(size_t capacity)
     return queue;
 }
 
+priority_queue *priority_queue_from_array(int *data, size_t length)
+{
+    priority_queue *queue = priority_queue_new(length);
+    for (size_t i = 0; i < length; i++)
+        priority_queue_push(queue, data[i]);
+    return queue;
+}
+
+int *priority_queue_heapsort(int *data, size_t length)
+{
+    priority_queue *queue = priority_queue_from_array(data, length);
+    for (size_t i = 0; i < length; i++)
+        data[i] = priority_queue_pop(queue);
+    priority_queue_destroy(queue);
+    return data;
+}
+
 void priority_queue_destroy(priority_queue *queue)
 {
     free(queue->data);
@@ -30,7 +47,7 @@ void priority_queue_push(priority_queue *queue, int datum)
     queue->data[queue->length] = datum;
     size_t current_index = queue->length;
     queue->length++;
-    while (current_index >= 0)
+    while (current_index > 0)
     {
         size_t parent_index = (current_index - (current_index % 2 == 0 ? 2 : 1)) / 2;
         int    parent = queue->data[parent_index];
@@ -39,6 +56,7 @@ void priority_queue_push(priority_queue *queue, int datum)
             break;
         queue->data[parent_index] = current;
         queue->data[current_index] = parent;
+        current_index = parent_index;
     }
 }
 
@@ -51,19 +69,28 @@ int priority_queue_replace(priority_queue *queue, int datum)
     {
         size_t left_child_index = current_index * 2 + 1;
         size_t right_child_index = current_index * 2 + 2;
-        int    left_child = queue->data[left_child_index];
-        int    right_child = queue->data[right_child_index];
-        int    current = queue->data[current_index];
-        if (left_child > right_child && left_child > current)
+        int   *left_child =
+            left_child_index < queue->length ? &queue->data[left_child_index] : NULL;
+        int *right_child = right_child_index < queue->length
+                               ? &queue->data[right_child_index]
+                               : NULL;
+        int  current = queue->data[current_index];
+        if (right_child == NULL && left_child == NULL)
+            break;
+        if ((right_child == NULL ||
+             (left_child != NULL && *left_child > *right_child)) &&
+            *left_child > current)
         {
+            queue->data[current_index] = *left_child;
             queue->data[left_child_index] = current;
-            queue->data[current_index] = left_child;
             current_index = left_child_index;
         }
-        else if (right_child > left_child && right_child > current)
+        else if ((left_child == NULL ||
+                  (right_child != NULL && *right_child > *left_child)) &&
+                 *right_child > current)
         {
+            queue->data[current_index] = *right_child;
             queue->data[right_child_index] = current;
-            queue->data[current_index] = right_child;
             current_index = right_child_index;
         }
         else

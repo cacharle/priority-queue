@@ -19,6 +19,8 @@ typedef struct
 } priority_queue;
 
 priority_queue *priority_queue_new(size_t capacity);
+priority_queue *priority_queue_from_array(int *data, size_t length);
+int            *priority_queue_heapsort(int *data, size_t length);
 void            priority_queue_destroy(priority_queue *queue);
 void            priority_queue_push(priority_queue *queue, int datum);
 int             priority_queue_replace(priority_queue *queue, int datum);
